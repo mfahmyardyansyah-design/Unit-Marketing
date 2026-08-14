@@ -513,6 +513,7 @@ tr:hover td{background:#f8fafc}
   }
 
   /* ===== JADWAL SHIFT ===== */
+  #shift #shiftType{min-width:160px}
   #shift .shift-wrap{
     width:100%!important;
     max-width:100%!important;
@@ -620,7 +621,7 @@ tr:hover td{background:#f8fafc}
 </section>
 
 <section id="shift" class="page">
-<h1>Jadwal Shift Bulanan</h1><div class="subtitle">Pilih bulan dan tahun, lalu isi shift tiap personil</div>
+<h1>Jadwal Shift Bulanan</h1><div class="subtitle">Kelola 2 versi jadwal: BPJS dan Digital Marketing</div>
 <div class="panel">
 <div class="monthbar">
 <div><label>Bulan</label><select id="shiftMonth" onchange="renderShift()"></select></div>
@@ -635,13 +636,13 @@ tr:hover td{background:#f8fafc}
 </section>
 
 <section id="apm" class="page">
-<h1>Jadwal APM</h1><div class="subtitle">Otomatis mengambil personil dari Jadwal Shift yang sedang dinas pada jam tersebut</div>
+<h1>Jadwal APM</h1><div class="subtitle">Otomatis mengambil personil yang sedang dinas dari BPJS dan Digital Marketing</div>
 <div class="panel">
   <div class="monthbar">
     <div><label>Tanggal</label><input id="apmDate" type="date" onchange="renderApm()"></div>
     <button class="primary" onclick="generateApm()">🔄 Buat Jadwal APM</button>
   </div>
-  <div class="hint">APM berjalan <b>07:00–21:00</b> dengan 1 personil untuk setiap blok 1 jam: 07:00–08:00 sampai 20:00–21:00. Personil dipilih hanya jika jam tersebut termasuk jam dinas pada Jadwal Shift hari itu.</div>
+  <div class="hint">APM berjalan <b>07:00–21:00</b> dengan 1 personil untuk setiap blok 1 jam: 07:00–08:00 sampai 20:00–21:00. Personil dipilih jika jam tersebut termasuk jam dinas pada Jadwal Shift BPJS atau Digital Marketing hari itu.</div>
 </div>
 <div class="panel"><div class="shift-wrap"><table class="shift-table">
 <thead id="apmHead"></thead><tbody id="apmBody"></tbody>
@@ -650,7 +651,7 @@ tr:hover td{background:#f8fafc}
 
 <section id="usroh" class="page">
 <h1>Jadwal Usroh</h1>
-<div class="subtitle">Format seperti Excel: setiap personil mendapat jadwal otomatis dari jadwal shift</div>
+<div class="subtitle">Format seperti Excel: otomatis mengambil jadwal dari Jadwal Shift BPJS</div>
 <div class="panel">
   <div class="monthbar">
     <div><label>Bulan</label><select id="usrohMonth" onchange="renderUsrohMonth()"></select></div>
@@ -729,7 +730,14 @@ let holidays = JSON.parse(localStorage.getItem("holidays")) || [];
 let rekapNames = JSON.parse(localStorage.getItem("rekapNames")) || [];
 let rekapData = JSON.parse(localStorage.getItem("rekapData")) || {};
 let rekapEval = JSON.parse(localStorage.getItem("rekapEval")) || [];
-let shiftData = JSON.parse(localStorage.getItem("shiftData")) || {};
+/* Dua versi jadwal shift dipisahkan agar sumber Usroh/APM jelas. */
+let shiftDataBPJS = JSON.parse(localStorage.getItem("shiftDataBPJS")) || {};
+let shiftDataDigital = JSON.parse(localStorage.getItem("shiftDataDigital")) || {};
+/* Migrasi sekali dari data shift lama ke BPJS agar data lama tidak hilang. */
+if(!Object.keys(shiftDataBPJS).length){
+  const oldShift=JSON.parse(localStorage.getItem("shiftData")||"{}");
+  if(Object.keys(oldShift).length) shiftDataBPJS=oldShift;
+}
 let apmSchedule = JSON.parse(localStorage.getItem("apmSchedule")) || {};
 let editUsroh = -1;
 
@@ -741,7 +749,7 @@ function persist(){
  localStorage.setItem("rekapNames",JSON.stringify(rekapNames));
  localStorage.setItem("rekapData",JSON.stringify(rekapData));
  localStorage.setItem("rekapEval",JSON.stringify(rekapEval));
- localStorage.setItem("shiftData",JSON.stringify(shiftData));
+ localStorage.setItem("shiftData",JSON.stringify(shiftDataBPJS));
  localStorage.setItem("apmSchedule",JSON.stringify(apmSchedule));
  updateBeranda();
 }
@@ -789,7 +797,7 @@ function isHoliday(date){
 function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function shiftFor(person,d){
  const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
- return ((shiftData[key]||{})[person]||{})[d.getDate()]||"";
+ return ((shiftDataBPJS[key]||{})[person]||{})[d.getDate()]||"";
 }
 function isOnDuty(person,d,time){
  if(isHoliday(d))return true; // tanggal libur tidak dipakai sebagai Usroh
@@ -881,38 +889,79 @@ function generateUsroh(){
 function apmKey(date){return date;}
 function timeToMin(t){const [h,m]=t.split(":").map(Number);return h*60+m;}
 function apmSlots(){return Array.from({length:14},(_,i)=>{const h=7+i;return {start:`${String(h).padStart(2,"0")}:00`,end:`${String(h+1).padStart(2,"0")}:00`};});}
-function personOnDutyAt(person,date,time){
+
+/* =========================================================
+   JADWAL APM — WAJIB MENGIKUTI JAM DINAS MASING-MASING
+   BPJS + Digital Marketing dibaca bersamaan, tetapi seorang
+   personil hanya boleh muncul pada slot APM yang benar-benar
+   berada di dalam jam shift-nya.
+   ========================================================= */
+function getApmDutySources(person,date,time){
   const d=new Date(date+"T00:00:00");
-  const code=shiftFor(person,d);
-  if(!code || code==="Libur" || code==="C")return false;
-  const range=shiftHours[code]; if(!range)return false;
-  const t=timeToMin(time), start=timeToMin(range[0]), end=timeToMin(range[1]);
-  return t>=start && t<end;
+  const result=[];
+  ["bpjs","digital"].forEach(type=>{
+    const code=shiftForType(person,d,type);
+    if(!code || code==="Libur" || code==="C")return;
+    const range=shiftHours[code];
+    if(!range)return;
+    const t=timeToMin(time);
+    const start=timeToMin(range[0]);
+    const end=timeToMin(range[1]);
+    /* Slot APM harus berada di dalam jam dinas.
+       Contoh: 06:00–14:00 hanya bisa APM 07:00–08:00 ... 13:00–14:00.
+       Shift 18:00–21:00 hanya bisa APM 18:00–19:00 ... 20:00–21:00. */
+    if(t>=start && t<end){
+      result.push({type,code,start:range[0],end:range[1]});
+    }
+  });
+  return result;
 }
+function personOnDutyAt(person,date,time){return getApmDutySources(person,date,time).length>0;}
 function apmEligible(date,time){return persons.filter(p=>personOnDutyAt(p,date,time));}
+function apmEligibleDetail(date,time){
+  return apmEligible(date,time).map(person=>({person,sources:getApmDutySources(person,date,time)}));
+}
 function generateApm(){
   const date=apmDate.value; if(!date)return alert("Pilih tanggal APM terlebih dahulu.");
-  const slots=apmSlots(); let previous=[]; const result={};
-  slots.forEach((slot,i)=>{
-    const eligible=apmEligible(date,slot.start);
-    // Sebisa mungkin rotasi agar personil tidak mendapat jam berturut-turut.
-    let pool=eligible.filter(p=>p!==previous[i-1]);
-    if(!pool.length)pool=eligible;
-    const chosen=pool.length?pool[i%pool.length]:"TIDAK ADA PERSONIL DINAS";
-    result[slot.start]={end:slot.end,person:chosen,eligible}; previous.push(chosen);
+  const slots=apmSlots();
+  const result={};
+  let lastPerson="";
+
+  slots.forEach(slot=>{
+    const details=apmEligibleDetail(date,slot.start);
+
+    /* Jangan pernah memilih personil yang shift-nya tidak mencakup
+       jam APM tersebut. Prioritas rotasi hanya dilakukan di antara
+       personil yang memang sedang dinas pada jam itu. */
+    let pool=details.filter(x=>x.person!==lastPerson);
+    if(!pool.length)pool=details;
+
+    const chosen=pool.length ? pool[0] : null;
+    result[slot.start]={
+      end:slot.end,
+      person:chosen?chosen.person:"TIDAK ADA PERSONIL DINAS",
+      eligible:details.map(x=>x.person),
+      sources:chosen?chosen.sources:[]
+    };
+    if(chosen)lastPerson=chosen.person;
   });
-  apmSchedule[apmKey(date)]=result; persist(); renderApm();
+
+  apmSchedule[apmKey(date)]=result;
+  persist();
+  renderApm();
 }
 function renderApm(){
   if(!window.apmDate || !apmDate.value)return;
   const date=apmDate.value, slots=apmSlots(), data=apmSchedule[apmKey(date)]||{};
-  const d=new Date(date+"T00:00:00"), dayNames=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-  apmHead.innerHTML=`<tr><th>No</th><th>Jam APM</th><th>Personil</th><th>Shift Hari Ini</th><th>Status</th></tr>`;
+  apmHead.innerHTML=`<tr><th>No</th><th>Jam APM</th><th>Personil</th><th>Shift Hari Ini</th><th>Sumber</th><th>Status</th></tr>`;
   apmBody.innerHTML=slots.map((slot,i)=>{
-    const a=data[slot.start]||{}; const eligible=apmEligible(date,slot.start);
-    const person=a.person||"-"; const shift=person!=="-"&&person!=="TIDAK ADA PERSONIL DINAS"?shiftFor(person,d):"-";
+    const a=data[slot.start]||{};
+    const details=apmEligibleDetail(date,slot.start);
+    const person=a.person||"-";
+    const detail=details.find(x=>x.person===person);
+    const sourceCodes=detail?detail.sources.map(x=>`${x.type==="bpjs"?"BPJS":"Digital Marketing"}: ${x.code} (${x.start}–${x.end})`):[];
     const ok=person!=="TIDAK ADA PERSONIL DINAS"&&person!=="-";
-    return `<tr><td>${i+1}</td><td><b>${slot.start} – ${slot.end}</b></td><td><b>${escapeHtml(person)}</b></td><td>${escapeHtml(shift)}</td><td>${ok?`<span style="color:#16803c">✓ Dinas (${eligible.length} tersedia)</span>`:`<span class="danger">❌ Tidak ada personil yang dinas</span>`}</td></tr>`;
+    return `<tr><td>${i+1}</td><td><b>${slot.start} – ${slot.end}</b></td><td><b>${escapeHtml(person)}</b></td><td>${detail?escapeHtml(detail.sources.map(x=>x.code).join(" / ")):"-"}</td><td>${sourceCodes.length?escapeHtml(sourceCodes.join(" | ")):"-"}</td><td>${ok?`<span style="color:#16803c">✓ Dinas (${details.length} tersedia)</span>`:`<span class="danger">❌ Tidak ada personil yang dinas</span>`}</td></tr>`;
   }).join("");
 }
 function addHoliday(){
@@ -948,11 +997,43 @@ function initMonthYear(){
  for(let i=y-5;i<=y+5;i++)shiftYear.innerHTML+=`<option value="${i}">${i}</option>`;
  shiftMonth.value=new Date().getMonth();shiftYear.value=y;
 }
+function getActiveShiftData(){
+  return shiftType.value==="digital" ? shiftDataDigital : shiftDataBPJS;
+}
+function getShiftDataFor(type){
+  return type==="digital" ? shiftDataDigital : shiftDataBPJS;
+}
+function shiftForType(person,d,type){
+  const data=getShiftDataFor(type);
+  const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  return ((data[key]||{})[person]||{})[d.getDate()]||"";
+}
+function isOnDutyType(person,d,time,type){
+  if(isHoliday(d))return false;
+  const code=shiftForType(person,d,type);
+  if(!code || code==="Libur" || code==="C")return false;
+  const range=shiftHours[code];
+  if(!range)return false;
+  return !(time<range[0] || time>range[1]);
+}
+function apmEligibleAll(date,time){
+  return persons.filter(p=>isOnDutyType(p,new Date(date+"T00:00:00"),time,"bpjs") ||
+                            isOnDutyType(p,new Date(date+"T00:00:00"),time,"digital"));
+}
+function shiftSourceForApm(person,date,time){
+  const d=new Date(date+"T00:00:00");
+  const b=isOnDutyType(person,d,time,"bpjs");
+  const dm=isOnDutyType(person,d,time,"digital");
+  const labels=[];
+  if(b)labels.push("BPJS");
+  if(dm)labels.push("Digital Marketing");
+  return labels.join(" + ") || "-";
+}
 function renderShift(){
  if(!shiftMonth.value)return;
  let y=+shiftYear.value,m=+shiftMonth.value,d=daysInMonth(y,m),key=monthKey();
  shiftHead.innerHTML="<tr><th>Nama Personil</th>"+Array.from({length:d},(_,i)=>`<th>${i+1}</th>`).join("")+"</tr>";
- let month=shiftData[key]||{};
+ let month=getActiveShiftData()[key]||{};
  shiftBody.innerHTML=persons.map((p,pi)=>{
    let row="<tr><td><b>"+escapeHtml(p)+"</b></td>";
    for(let day=1;day<=d;day++){
@@ -963,13 +1044,18 @@ function renderShift(){
  }).join("");
 }
 function setShift(person,day,value){
- let key=monthKey();if(!shiftData[key])shiftData[key]={};if(!shiftData[key][person])shiftData[key][person]={};
- if(value)shiftData[key][person][day]=value;else delete shiftData[key][person][day];
- persist();
- // Jika halaman Usroh sedang terbuka, status bentrok langsung diperbarui.
- if(document.getElementById("usroh").classList.contains("active")) renderUsrohMonth();
+  let type=shiftType.value||"bpjs";
+  let data=getActiveShiftData();
+  let key=monthKey();
+  if(!data[key])data[key]={};
+  if(!data[key][person])data[key][person]={};
+  if(value)data[key][person][day]=value;else delete data[key][person][day];
+  persist();
+  renderShift();
+  if(document.getElementById("usroh").classList.contains("active")) renderUsrohMonth();
+  if(document.getElementById("apm").classList.contains("active")) renderApm();
 }
-function saveShiftMonth(){persist();alert("Jadwal shift bulan "+shiftMonth.options[shiftMonth.selectedIndex].text+" "+shiftYear.value+" sudah disimpan.")}
+function saveShiftMonth(){persist();alert("Jadwal "+(shiftType.value==="digital"?"Digital Marketing":"BPJS")+" bulan "+shiftMonth.options[shiftMonth.selectedIndex].text+" "+shiftYear.value+" sudah disimpan.")}
 function addPerson(){
  let p=newPerson.value.trim();if(!p)return alert("Masukkan nama personil.");
  if(persons.includes(p))return alert("Nama personil sudah ada.");
@@ -1000,7 +1086,8 @@ function render(){
 function updateBeranda(){
  dashUsroh.textContent=Object.values(usrohSchedule).filter(x=>x!=="GANTI").length;
  dashMember.textContent=persons.length;
- let total=0;Object.values(shiftData).forEach(month=>Object.values(month).forEach(days=>total+=Object.keys(days).length));
+ let total=0;
+  [shiftDataBPJS,shiftDataDigital].forEach(data=>Object.values(data).forEach(month=>Object.values(month).forEach(days=>total+=Object.keys(days).length)));
  dashFilled.textContent=total;
  let totalA=0,hadir=0;
  Object.values(rekapData).forEach(month=>Object.values(month||{}).forEach(person=>Object.values(person||{}).forEach(v=>{if(v){totalA++;if(v==="Hadir")hadir++;}})));
@@ -1009,6 +1096,7 @@ function updateBeranda(){
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function esc(s){return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
 initMonthYear();initUsrohMonthYear();initRekapMonthYear();
+if(window.shiftType) shiftType.value="bpjs";
 if(window.apmDate){apmDate.value=new Date().toISOString().slice(0,10);}
 render();renderMaster();renderHolidays();renderShift();renderUsrohMonth();updateBeranda();
 </script>
