@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beranda Usroh & Shift</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#172033}
+.app{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#132238;color:#fff;padding:18px;position:fixed;left:0;top:0;bottom:0;box-shadow:4px 0 18px #0f172a18}
+.logo{font-size:20px;font-weight:700;margin-bottom:24px}
+.logo small{display:block;font-size:11px;color:#aebed1;margin-top:4px}
+.nav button{width:100%;padding:12px 14px;margin:4px 0;border:0;border-radius:8px;background:transparent;color:#d8e2ee;text-align:left;cursor:pointer;font-size:14px;transition:.2s}
+.nav button:hover{background:#1d3554;color:#fff}
+.nav button.active{background:#2563a8;color:#fff;box-shadow:0 3px 8px #0b1d3326}
+.main{margin-left:245px;padding:24px;width:calc(100% - 245px)}
+h1{margin:0;font-size:24px;color:#132238}
+.subtitle{color:#64748b;font-size:13px;margin-top:5px}
+.page{display:none}.page.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:20px 0}
+.card,.panel{background:#fff;border-radius:12px;box-shadow:0 2px 10px #13223810;border:1px solid #e5eaf0}
+.card{padding:18px}
+.num{font-size:28px;font-weight:bold;margin-top:7px;color:#1d5f9e}
+.panel{padding:20px;margin-bottom:20px}
+.panel h2{font-size:18px;margin:0 0 15px;color:#1b2d45}
+.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end}
+label{font-size:12px;display:block;margin-bottom:5px;color:#526276}
+input,select{padding:9px;border:1px solid #ccd6e2;border-radius:7px;width:100%;background:#fff;color:#172033;outline:none}
+input:focus,select:focus{border-color:#4d8bc4;box-shadow:0 0 0 3px #2563a812}
+button.primary{background:#2563a8;color:#fff;border:0;border-radius:7px;padding:10px 14px;cursor:pointer;box-shadow:0 2px 5px #2563a822}
+button.primary:hover{background:#1d568f}
+.btn{border:0;border-radius:6px;padding:7px 10px;cursor:pointer}
+.edit{background:#e4eef9;color:#205a8d}
+.del{background:#fde8e8;color:#b42318}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px;border-bottom:1px solid #e5eaf0;text-align:left;font-size:12px}
+th{background:#edf3f9;color:#334155;white-space:nowrap}
+tr:hover td{background:#f8fafc}
+.shift-wrap{overflow:auto;border:1px solid #dce4ed;border-radius:8px}
+.shift-table{min-width:1100px}
+.shift-table th,.shift-table td{text-align:center;min-width:58px;padding:6px}
+.shift-table th:first-child,.shift-table td:first-child{position:sticky;left:0;background:#fff;z-index:2;min-width:170px;text-align:left}
+.shift-table th:first-child{z-index:3;background:#edf3f9}
+.shift-select{font-size:11px;padding:6px 2px;min-width:55px;border-radius:5px}
+.monthbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.monthbar>div{min-width:130px}
+.hint{font-size:12px;color:#64748b;margin-top:10px}
+.notice{padding:12px;background:#eef6ff;border-left:4px solid #3b82c4;border-radius:5px;font-size:13px;color:#334155}
+.danger{color:#b42318}
+.usroh-matrix td{min-width:180px;vertical-align:top}
+.usroh-matrix .danger{color:#c62828}
+@media(max-width:850px){.sidebar{width:210px}.main{margin-left:210px;width:calc(100% - 210px)}.cards{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.app{display:block}.sidebar{position:relative;width:100%;height:auto}.nav{display:flex;overflow:auto}.nav button{min-width:125px}.main{margin-left:0;width:100%;padding:14px}.cards,.formgrid{grid-template-columns:1fr}}
+
+/* ===== MOBILE: HANYA PERAPIAN TAMPILAN, FUNGSI & ISI FILE FIX TETAP ===== */
+@media(max-width:600px){
+  html,body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  .app{
+    display:block !important;
+    min-height:100vh;
+  }
+
+  /* Menu tetap DI ATAS */
+  .sidebar{
+    position:relative !important;
+    top:auto !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    width:100% !important;
+    height:auto !important;
+    padding:10px 8px 8px !important;
+    z-index:1000;
+    box-shadow:0 2px 10px #0002;
+  }
+
+  /* Judul/logo TIDAK disembunyikan */
+  .logo{
+    display:block !important;
+    margin:0 4px 8px !important;
+    font-size:17px !important;
+  }
+  .logo small{
+    font-size:10px !important;
+  }
+
+  .nav{
+    display:flex !important;
+    width:100%;
+    gap:5px;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    padding-bottom:2px;
+    scrollbar-width:none;
+  }
+  .nav::-webkit-scrollbar{display:none}
+
+  .nav button{
+    flex:0 0 auto;
+    width:auto !important;
+    min-width:82px !important;
+    padding:8px 9px !important;
+    margin:0 !important;
+    font-size:10px !important;
+    white-space:nowrap;
+    text-align:center !important;
+  }
+
+  .main{
+    margin-left:0 !important;
+    width:100% !important;
+    padding:14px 9px 20px !important;
+    box-sizing:border-box;
+  }
+
+  h1{
+    font-size:22px !important;
+    line-height:1.2;
+  }
+  .subtitle{
+    font-size:12px !important;
+    line-height:1.4;
+  }
+
+  .cards{
+    grid-template-columns:1fr 1fr !important;
+    gap:7px !important;
+    margin:12px 0 !important;
+  }
+  .card{
+    padding:11px !important;
+    font-size:12px;
+  }
+  .num{
+    font-size:21px !important;
+  }
+
+  .panel{
+    padding:11px !important;
+    margin-bottom:10px !important;
+    border-radius:10px;
+  }
+
+  .monthbar{
+    display:grid !important;
+    grid-template-columns:1fr 1fr;
+    gap:7px !important;
+  }
+  .monthbar>div{
+    min-width:0 !important;
+  }
+  .monthbar>button{
+    grid-column:1/-1;
+    width:100%;
+  }
+
+  input,select{
+    font-size:13px !important;
+    padding:8px !important;
+  }
+  button.primary{
+    font-size:13px !important;
+    padding:9px 10px !important;
+  }
+
+  /* Jadwal Usroh: muat 4 minggu tanpa membuat halaman melebar */
+  .usroh-matrix{
+    width:100% !important;
+    min-width:0 !important;
+    table-layout:fixed;
+  }
+  .usroh-matrix th,
+  .usroh-matrix td{
+    min-width:0 !important;
+    padding:5px 2px !important;
+    font-size:9px !important;
+    line-height:1.2;
+    overflow-wrap:anywhere;
+  }
+  .usroh-matrix th:first-child,
+  .usroh-matrix td:first-child{
+    width:25px !important;
+    min-width:25px !important;
+    text-align:center;
+  }
+  .usroh-matrix th:nth-child(2),
+  .usroh-matrix td:nth-child(2){
+    width:82px !important;
+    min-width:82px !important;
+    text-align:left;
+  }
+
+  /* Tabel yang memang lebar tetap dapat digeser horizontal */
+  .shift-wrap{
+    width:100%;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .shift-table{
+    min-width:850px;
+  }
+
+  .formgrid{
+    grid-template-columns:1fr !important;
+  }
+}
+@media(max-width:380px){
+  .nav button{
+    min-width:76px !important;
+    font-size:9px !important;
+  }
+  .usroh-matrix th,
+  .usroh-matrix td{
+    font-size:8px !important;
+  }
+  .usroh-matrix th:nth-child(2),
+  .usroh-matrix td:nth-child(2){
+    width:74px !important;
+    min-width:74px !important;
+  }
+}
+
+
+/* =========================================================
+   MOBILE FINAL — SEMUA MENU MENGIKUTI POLA JADWAL USROH
+   Fungsi, data, rumus, dan struktur desktop tidak diubah.
+   ========================================================= */
+@media (max-width:600px){
+
+  html,body{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+  }
+
+  .app{
+    display:block!important;
+    min-height:100vh!important;
+  }
+
+  /* ===== MENU ATAS ===== */
+  .sidebar{
+    position:relative!important;
+    inset:auto!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:9px 7px 8px!important;
+    z-index:1000!important;
+    box-shadow:0 2px 10px #0002!important;
+  }
+
+  .logo{
+    display:block!important;
+    margin:0 4px 8px!important;
+    font-size:16px!important;
+    line-height:1.2!important;
+  }
+  .logo small{
+    display:block!important;
+    font-size:9px!important;
+    margin-top:2px!important;
+  }
+
+  .nav{
+    display:flex!important;
+    flex-direction:row!important;
+    width:100%!important;
+    gap:4px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    padding:0 1px 2px!important;
+    scrollbar-width:none!important;
+  }
+  .nav::-webkit-scrollbar{display:none!important}
+  .nav button{
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:82px!important;
+    margin:0!important;
+    padding:8px 9px!important;
+    border-radius:7px!important;
+    font-size:10px!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+    text-align:center!important;
+  }
+
+  /* ===== AREA KONTEN UMUM ===== */
+  .main{
+    margin-left:0!important;
+    width:100%!important;
+    padding:13px 9px 20px!important;
+    box-sizing:border-box!important;
+  }
+  h1{
+    font-size:22px!important;
+    line-height:1.2!important;
+    margin:0!important;
+  }
+  .subtitle{
+    font-size:12px!important;
+    line-height:1.4!important;
+    margin-top:4px!important;
+  }
+  .panel{
+    width:100%!important;
+    padding:11px!important;
+    margin-bottom:10px!important;
+    border-radius:10px!important;
+  }
+  .panel h2{
+    font-size:16px!important;
+    margin:0 0 9px!important;
+  }
+
+  /* ===== BERANDA ===== */
+  .cards{
+    grid-template-columns:1fr 1fr!important;
+    gap:7px!important;
+    margin:11px 0!important;
+  }
+  .card{
+    padding:10px!important;
+    font-size:11px!important;
+    border-radius:9px!important;
+  }
+  .num{
+    font-size:20px!important;
+    margin-top:5px!important;
+  }
+
+  /* ===== FORM / BULAN ===== */
+  .monthbar{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:7px!important;
+    align-items:end!important;
+    width:100%!important;
+  }
+  .monthbar>div{
+    min-width:0!important;
+    width:100%!important;
+  }
+  .monthbar>button,
+  .monthbar>.primary{
+    grid-column:1/-1!important;
+    width:100%!important;
+  }
+  label{
+    font-size:11px!important;
+  }
+  input,select{
+    width:100%!important;
+    min-width:0!important;
+    padding:8px!important;
+    font-size:13px!important;
+  }
+  button.primary{
+    font-size:13px!important;
+    padding:9px 10px!important;
+  }
+  .hint,.notice{
+    font-size:11px!important;
+    line-height:1.45!important;
+  }
+
+  /* ===== JADWAL USROH ===== */
+  .usroh-matrix{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+  }
+  .usroh-matrix th,
+  .usroh-matrix td{
+    min-width:0!important;
+    padding:5px 2px!important;
+    font-size:9px!important;
+    line-height:1.2!important;
+    overflow-wrap:anywhere!important;
+  }
+  .usroh-matrix th:first-child,
+  .usroh-matrix td:first-child{
+    width:25px!important;
+    min-width:25px!important;
+    max-width:25px!important;
+    text-align:center!important;
+  }
+  .usroh-matrix th:nth-child(2),
+  .usroh-matrix td:nth-child(2){
+    width:82px!important;
+    min-width:82px!important;
+    text-align:left!important;
+  }
+
+  /* ===== REKAP USROH ===== */
+  #rekap .formgrid{
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+  }
+  #rekap .formgrid .primary{
+    width:100%!important;
+  }
+
+  /* Tabel rekap memang lebih banyak kolom; tetap nyaman di HP
+     dengan scroll horizontal dan No/Nama tetap terlihat. */
+  #rekap .shift-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  #rekap .shift-table{
+    min-width:820px!important;
+    table-layout:auto!important;
+  }
+  #rekap .shift-table th,
+  #rekap .shift-table td{
+    padding:5px 4px!important;
+    font-size:10px!important;
+    white-space:nowrap!important;
+  }
+  #rekap .shift-table th:first-child,
+  #rekap .shift-table td:first-child{
+    position:sticky!important;
+    left:0!important;
+    z-index:4!important;
+    min-width:30px!important;
+    width:30px!important;
+    background:#fff!important;
+    text-align:center!important;
+  }
+  #rekap .shift-table th:nth-child(2),
+  #rekap .shift-table td:nth-child(2){
+    position:sticky!important;
+    left:30px!important;
+    z-index:4!important;
+    min-width:125px!important;
+    background:#fff!important;
+  }
+  #rekap .shift-table thead th{
+    background:#edf3f9!important;
+  }
+  #rekap .shift-table select{
+    min-width:70px!important;
+    width:auto!important;
+    font-size:10px!important;
+    padding:5px 3px!important;
+  }
+  #rekap .shift-table .btn{
+    font-size:9px!important;
+    padding:4px 6px!important;
+  }
+
+  /* Evaluasi: tidak dibuat selebar tabel rekap */
+  #rekap .panel:last-child .shift-table{
+    min-width:560px!important;
+  }
+  #rekap .panel:last-child .shift-table th,
+  #rekap .panel:last-child .shift-table td{
+    white-space:normal!important;
+  }
+
+  /* ===== JADWAL APM ===== */
+  #apm .monthbar{
+    grid-template-columns:1fr!important;
+  }
+  #apm .monthbar>button{
+    grid-column:auto!important;
+  }
+  #apm .shift-wrap{
+    width:100%!important;
+    overflow-x:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  #apm .shift-table{
+    min-width:600px!important;
+  }
+  #apm .shift-table th,
+  #apm .shift-table td{
+    padding:6px 5px!important;
+    font-size:10px!important;
+    white-space:normal!important;
+  }
+  #apm .shift-table th:nth-child(1),
+  #apm .shift-table td:nth-child(1){
+    min-width:35px!important;
+    width:35px!important;
+    text-align:center!important;
+  }
+  #apm .shift-table th:nth-child(2),
+  #apm .shift-table td:nth-child(2){
+    min-width:90px!important;
+  }
+  #apm .shift-table th:nth-child(3),
+  #apm .shift-table td:nth-child(3){
+    min-width:145px!important;
+  }
+  #apm .shift-table th:nth-child(4),
+  #apm .shift-table td:nth-child(4){
+    min-width:100px!important;
+  }
+  #apm .shift-table th:nth-child(5),
+  #apm .shift-table td:nth-child(5){
+    min-width:190px!important;
+  }
+
+  /* ===== JADWAL SHIFT ===== */
+  #shift .shift-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  #shift .shift-table{
+    min-width:1100px!important;
+  }
+  #shift .shift-table th,
+  #shift .shift-table td{
+    padding:5px 2px!important;
+    font-size:9px!important;
+  }
+  #shift .shift-table th:first-child,
+  #shift .shift-table td:first-child{
+    position:sticky!important;
+    left:0!important;
+    z-index:5!important;
+    min-width:125px!important;
+    width:125px!important;
+    background:#fff!important;
+    text-align:left!important;
+  }
+  #shift .shift-table th:first-child{
+    background:#edf3f9!important;
+  }
+  #shift .shift-select{
+    min-width:55px!important;
+    width:55px!important;
+    padding:5px 1px!important;
+    font-size:9px!important;
+  }
+
+  /* ===== MASTER DATA ===== */
+  #master .formgrid{
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+  }
+  #master .formgrid .primary{
+    width:100%!important;
+  }
+  #master table{
+    width:100%!important;
+    table-layout:auto!important;
+  }
+  #master table th,
+  #master table td{
+    padding:7px 5px!important;
+    font-size:11px!important;
+  }
+  #master table th:first-child,
+  #master table td:first-child{
+    width:35px!important;
+    text-align:center!important;
+  }
+  #master .btn{
+    font-size:10px!important;
+    padding:5px 7px!important;
+  }
+}
+
+@media(max-width:380px){
+  .nav button{
+    min-width:76px!important;
+    font-size:9px!important;
+    padding:8px 7px!important;
+  }
+  .main{padding-left:7px!important;padding-right:7px!important}
+  .usroh-matrix th,.usroh-matrix td{font-size:8px!important}
+  .usroh-matrix th:nth-child(2),
+  .usroh-matrix td:nth-child(2){
+    width:74px!important;
+    min-width:74px!important;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">UNIT MARKETING<small>Yasmin Hospital</small></div>
+  <div class="nav">
+    <button class="active" onclick="showPage('beranda',this)">🏠 Beranda</button>
+    <button onclick="showPage('shift',this)">🔄 Jadwal Shift</button>
+    <button onclick="showPage('apm',this)">⏱️ Jadwal APM</button>
+    <button onclick="showPage('usroh',this)">📅 Jadwal Usroh</button>
+    <button onclick="showPage('rekap',this)">📊 Rekap Usroh</button>
+    <button onclick="showPage('master',this)">⚙️ Master Data</button>
+  </div>
+</aside>
+
+<main class="main">
+<section id="beranda" class="page active">
+<h1>Beranda</h1><div class="subtitle">Ringkasan jadwal kegiatan</div>
+<div class="cards">
+<div class="card">Jadwal Usroh<div class="num" id="dashUsroh">0</div></div>
+<div class="card">Personil<div class="num" id="dashMember">0</div></div>
+<div class="card">Shift Terisi<div class="num" id="dashFilled">0</div></div>
+<div class="card">Kehadiran<div class="num" id="dashAttend">0%</div></div>
+</div>
+<div class="panel"><h2>Catatan</h2><div class="notice">Pilih bulan dan tahun pada menu Jadwal Shift. Tanggal otomatis mengikuti jumlah hari pada bulan tersebut. Setiap kotak tinggal dipilih kode shift.</div></div>
+</section>
+
+<section id="shift" class="page">
+<h1>Jadwal Shift Bulanan</h1><div class="subtitle">Jadwal shift dipisahkan berdasarkan divisi personil</div>
+<div class="panel">
+  <div class="monthbar">
+    <div><label>Bulan</label><select id="shiftMonth" onchange="renderShift()"></select></div>
+    <div><label>Tahun</label><select id="shiftYear" onchange="renderShift()"></select></div>
+    <button class="primary" onclick="saveShiftMonth()">💾 Simpan Jadwal Bulan Ini</button>
+  </div>
+  <div class="hint">Data personil otomatis mengikuti Master Data. Shift BPJS hanya menampilkan personil BPJS, sedangkan Shift Digital Marketing hanya menampilkan personil Digital Marketing.</div>
+</div>
+<div class="panel">
+  <h2>👤 Jadwal Shift BPJS</h2>
+  <div class="shift-wrap"><table class="shift-table"><thead id="shiftBpjsHead"></thead><tbody id="shiftBpjsBody"></tbody></table></div>
+</div>
+<div class="panel">
+  <h2>👤 Jadwal Shift Digital Marketing</h2>
+  <div class="shift-wrap"><table class="shift-table"><thead id="shiftDmHead"></thead><tbody id="shiftDmBody"></tbody></table></div>
+</div>
+</section>
+
+<section id="apm" class="page">
+<h1>Jadwal APM</h1><div class="subtitle">Otomatis mengambil personil dari Jadwal Shift yang sedang dinas pada jam tersebut</div>
+<div class="panel">
+  <div class="monthbar">
+    <div><label>Tanggal</label><input id="apmDate" type="date" onchange="renderApm()"></div>
+    <button class="primary" onclick="generateApm()">🔄 Buat Jadwal APM</button>
+  </div>
+  <div class="hint">APM berjalan <b>07:00–21:00</b> dengan 1 personil untuk setiap blok 1 jam: 07:00–08:00 sampai 20:00–21:00. Personil dipilih hanya jika jam tersebut termasuk jam dinas pada Jadwal Shift hari itu.</div>
+</div>
+<div class="panel"><div class="shift-wrap"><table class="shift-table">
+<thead id="apmHead"></thead><tbody id="apmBody"></tbody>
+</table></div></div>
+</section>
+
+<section id="usroh" class="page">
+<h1>Jadwal Usroh</h1>
+<div class="subtitle">Format seperti Excel: setiap personil mendapat jadwal otomatis dari jadwal shift</div>
+<div class="panel">
+  <div class="monthbar">
+    <div><label>Bulan</label><select id="usrohMonth" onchange="renderUsrohMonth()"></select></div>
+    <div><label>Tahun</label><select id="usrohYear" onchange="renderUsrohMonth()"></select></div>
+    <button class="primary" onclick="generateUsroh()">🔄 Buat Jadwal Otomatis</button>
+  </div>
+  <div class="hint">
+    Setiap kolom Minggu mengikuti minggu kalender. Jika tanggal 1 jatuh Jumat/Sabtu/Minggu,
+    <b>Minggu 1 dapat mengambil Senin–Kamis dari bulan sebelumnya</b>. Urutan jadwal:
+    <b>Senin 13:00 → Selasa 07:00 → Rabu 07:00 → Rabu 13:00 → Kamis 13:00</b>.
+    Personil hanya mendapat tanggal jika saat itu <b>di luar jam dinas</b> dan bukan tanggal libur.
+    Jika semua pilihan bentrok, muncul <b class="danger">❌ Ganti Jadwal</b>.
+  </div>
+</div>
+<div class="panel">
+<div class="shift-wrap"><table class="shift-table usroh-matrix">
+<thead id="usrohHead"></thead>
+<tbody id="usrohBody"></tbody>
+</table></div>
+</div>
+</section>
+
+<section id="rekap" class="page">
+<h1>Rekapan Usroh</h1><div class="subtitle">Rekap bulanan — daftar peserta Usroh tersimpan di Rekap Usroh</div>
+<div class="panel"><div class="monthbar"><div><label>Bulan</label><select id="rekapMonth" onchange="renderRekap()"></select></div><div><label>Tahun</label><select id="rekapYear" onchange="renderRekap()"></select></div></div></div>
+<div class="panel"><h2>Daftar Nama Rekapan Usroh</h2><div class="formgrid"><div><label>Nama</label><input id="rekapNameInput" placeholder="Masukkan nama peserta Usroh"></div><div><button class="primary" onclick="addRekapName()">＋ Tambah Nama</button></div></div><div id="rekapNames" style="margin-top:12px"></div></div>
+<div class="panel"><div class="shift-wrap"><table class="shift-table"><thead id="rekapHead"></thead><tbody id="rekapBody"></tbody></table></div></div>
+<div class="panel"><h2>Evaluasi Usroh</h2><div class="shift-wrap"><table class="shift-table"><thead><tr><th>No</th><th>Nama</th><th>Pekan</th><th>Keterangan</th><th>Sanksi Pelanggaran</th></tr></thead><tbody id="evalBody"></tbody></table></div></div>
+</section>
+
+<section id="master" class="page">
+<h1>Master Data</h1><div class="subtitle">Personil dipisahkan berdasarkan divisi, tetapi tetap tersimpan dalam satu data personil</div>
+<div class="panel">
+  <h2>👤 Personil BPJS</h2>
+  <div class="formgrid">
+    <div><label>Nama Personil BPJS</label><input id="newPersonBpjs" placeholder="Nama personil BPJS"></div>
+    <div><button class="primary" onclick="addPerson('BPJS')">+ Tambah Personil BPJS</button></div>
+  </div><br>
+  <table><thead><tr><th>No</th><th>Nama</th><th>Divisi</th><th>Aksi</th></tr></thead><tbody id="personBpjsBody"></tbody></table>
+</div>
+<div class="panel">
+  <h2>👤 Personil Digital Marketing</h2>
+  <div class="formgrid">
+    <div><label>Nama Personil Digital Marketing</label><input id="newPersonDm" placeholder="Nama personil Digital Marketing"></div>
+    <div><button class="primary" onclick="addPerson('Digital Marketing')">+ Tambah Personil Digital Marketing</button></div>
+  </div><br>
+  <table><thead><tr><th>No</th><th>Nama</th><th>Divisi</th><th>Aksi</th></tr></thead><tbody id="personDmBody"></tbody></table>
+</div>
+<div class="panel">
+  <h2>Daftar Tanggal Libur</h2>
+  <div class="formgrid">
+    <div><label>Tanggal Libur</label><input id="newHoliday" type="date"></div>
+    <div><button class="primary" onclick="addHoliday()">+ Tambah Libur</button></div>
+  </div><br>
+  <table><thead><tr><th>No</th><th>Tanggal</th><th>Aksi</th></tr></thead><tbody id="holidayBody"></tbody></table>
+</div>
+<div class="panel">
+  <h2>Daftar Kode Shift</h2>
+  <div class="formgrid">
+    <div><label>Kode Shift Baru</label><input id="newCode" placeholder="Contoh: FO P1 PT"></div>
+    <div><button class="primary" onclick="addCode()">+ Tambah Kode</button></div>
+  </div><br>
+  <table><thead><tr><th>No</th><th>Kode</th><th>Aksi</th></tr></thead><tbody id="codeBody"></tbody></table>
+</div>
+</section>
+</main>
+</div>
+
+<script>
+/* =========================================================
+   MASTER DATA — EDIT DATA CONTOH DI SINI JIKA DIPERLUKAN
+   ========================================================= */
+function normalizeDivision(v){
+  const x=String(v||"").trim().toLowerCase();
+  if(x.includes("digital") && x.includes("marketing")) return "Digital Marketing";
+  return "BPJS";
+}
+let persons = JSON.parse(localStorage.getItem("persons")) || [
+  {id:"P1",name:"Personil 1",division:"BPJS"},
+  {id:"P2",name:"Personil 2",division:"BPJS"},
+  {id:"P3",name:"Personil 3",division:"BPJS"},
+  {id:"P4",name:"Personil 4",division:"Digital Marketing"}
+];
+// Migrasi otomatis dari versi lama yang menyimpan nama sebagai string.
+persons = persons.map((p,i)=>typeof p==="string"
+  ? {id:"P"+(i+1),name:p,division:"BPJS"}
+  : {id:p.id||("P"+(i+1)),name:p.name||"",division:normalizeDivision(p.division)});
+
+function personName(p){ return typeof p === "string" ? p : (p && p.name) || ""; }
+function personsByDivision(division){
+  const target=normalizeDivision(division);
+  return persons.filter(p => p && normalizeDivision(p.division) === target);
+}
+
+let shiftCodes = JSON.parse(localStorage.getItem("shiftCodes")) || [
+  "FO P1 PT","SPV","FO PS PT","FO PS PT 2","FO S1 PT","FO S2 PT","Libur","C"
+];
+
+let usrohSchedule = JSON.parse(localStorage.getItem("usrohSchedule")) || {};
+let holidays = JSON.parse(localStorage.getItem("holidays")) || [];
+let rekapNames = JSON.parse(localStorage.getItem("rekapNames")) || [];
+let rekapData = JSON.parse(localStorage.getItem("rekapData")) || {};
+let rekapEval = JSON.parse(localStorage.getItem("rekapEval")) || {};
+let shiftData = JSON.parse(localStorage.getItem("shiftData")) || {};
+let apmSchedule = JSON.parse(localStorage.getItem("apmSchedule")) || {};
+let editUsroh = -1;
+
+function persist(){
+ localStorage.setItem("persons",JSON.stringify(persons));
+ localStorage.setItem("shiftCodes",JSON.stringify(shiftCodes));
+ localStorage.setItem("usrohSchedule",JSON.stringify(usrohSchedule));
+ localStorage.setItem("holidays",JSON.stringify(holidays));
+ localStorage.setItem("rekapNames",JSON.stringify(rekapNames));
+ localStorage.setItem("rekapData",JSON.stringify(rekapData));
+ localStorage.setItem("rekapEval",JSON.stringify(rekapEval));
+ localStorage.setItem("shiftData",JSON.stringify(shiftData));
+ localStorage.setItem("apmSchedule",JSON.stringify(apmSchedule));
+ updateBeranda();
+}
+function showPage(id,btn){
+ 
+ document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+ const page=document.getElementById(id);
+ if(!page)return;
+ page.classList.add("active");
+ document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
+ btn.classList.add("active");
+ if(id==="shift")renderShift();
+  if(id==="apm")renderApm();
+ if(id==="usroh")renderUsrohMonth();
+ if(id==="rekap")renderRekap();
+ if(id==="master"){renderMaster();renderHolidays();}
+}
+/* ================= JADWAL USROH — FORMAT EXCEL ================= */
+const shiftHours = {
+ "FO P1 PT":["06:00","14:00"], "SPV":["07:00","15:00"],
+ "FO PS PT":["07:00","12:00"], "FO PS PT 2":["18:00","21:00"],
+ "FO S1 PT":["13:00","21:00"], "FO S2 PT":["14:00","22:00"],
+ "Libur":["00:00","00:00"], "C":["00:00","00:00"]
+};
+const usrohRules=[
+ {dow:1,time:"13:00"}, // Senin
+ {dow:2,time:"07:00"}, // Selasa
+ {dow:3,time:"07:00"}, // Rabu pagi
+ {dow:3,time:"13:00"}, // Rabu siang
+ {dow:4,time:"13:00"}  // Kamis
+];
+
+function initUsrohMonthYear(){
+ const names=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+ usrohMonth.innerHTML=names.map((n,i)=>`<option value="${i}">${n}</option>`).join("");
+ const y=new Date().getFullYear(); usrohYear.innerHTML="";
+ for(let i=y-5;i<=y+5;i++)usrohYear.innerHTML+=`<option value="${i}">${i}</option>`;
+ usrohMonth.value=new Date().getMonth(); usrohYear.value=y;
+}
+function isHoliday(date){
+ const d=(date instanceof Date)?date:new Date(date+"T00:00:00");
+ const s=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+ return holidays.includes(s);
+}
+function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function shiftFor(person,d){
+ const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+ const id=typeof person==="string" ? person : (person&&person.id)||"";
+ const name=personName(person);
+ const month=shiftData[key]||{};
+ // Data baru disimpan berdasarkan ID; data lama berdasarkan nama tetap dibaca.
+ return ((month[id]||month[name]||{})[d.getDate()])||"";
+}
+function getPersonById(id){
+ return persons.find(p=>p && p.id===id) || null;
+}
+function isOnDuty(person,d,time){
+ if(isHoliday(d))return true; // tanggal libur tidak dipakai sebagai Usroh
+ const code=shiftFor(person,d);
+ if(!code || code==="Libur" || code==="C")return false;
+ const range=shiftHours[code];
+ if(!range)return false;
+ // Sama seperti formula Excel: tersedia jika waktu < mulai ATAU waktu > selesai.
+ return !(time<range[0] || time>range[1]);
+}
+function fmtDateTime(d,time){
+ const days=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+ return `${days[d.getDay()]}, ${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()} ${time}`;
+}
+function getWeekStarts(month,year){
+ // Minggu 1 = Senin pada minggu kalender yang memuat tanggal 1.
+ // Jika tanggal 1 jatuh Jumat/Sabtu/Minggu, Senin-Kamis sebelumnya
+ // otomatis bisa berasal dari bulan sebelumnya.
+ const first=new Date(year,month,1);
+ const monday=new Date(first);
+ const back=(first.getDay()+6)%7;
+ monday.setDate(first.getDate()-back);
+
+ // Sesuai format Excel: 4 kolom Minggu.
+ return [0,1,2,3].map(i=>{
+   const d=new Date(monday);
+   d.setDate(monday.getDate()+i*7);
+   return d;
+ });
+}
+function fmtShortDate(d){
+ return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function candidateSessions(weekStart){
+ return usrohRules.map(r=>{
+   const d=new Date(weekStart); d.setDate(weekStart.getDate()+(r.dow-1));
+   return {date:d,time:r.time};
+ });
+}
+function findAvailable(person,weekStart){
+ for(const c of candidateSessions(weekStart)){
+   if(isHoliday(c.date))continue;
+   if(!isOnDuty(person,c.date,c.time))return c;
+ }
+ return null;
+}
+function renderUsrohMonth(){
+ if(usrohMonth.value==="")return;
+ const month=+usrohMonth.value,year=+usrohYear.value;
+ const weeks=getWeekStarts(month,year);
+ usrohHead.innerHTML=`<tr><th>NO</th><th>NAMA</th>${weeks.map((w,i)=>{
+   const end=new Date(w); end.setDate(w.getDate()+3);
+   return `<th>Minggu ${i+1}<br><small>${fmtShortDate(w)} – ${fmtShortDate(end)}</small></th>`;
+ }).join("")}</tr>`;
+ const bpjsPersons=personsByDivision("BPJS");
+ usrohBody.innerHTML=bpjsPersons.map((p,ri)=>{
+   const cells=weeks.map((w,wi)=>{
+     const key=`${year}-${month}-${p.id}-${wi}`;
+     const legacyKey=`${year}-${month}-${personName(p)}-${wi}`;
+     const value=usrohSchedule[key] ?? usrohSchedule[legacyKey];
+     if(value==="GANTI") return `<td class="danger"><b>❌ Ganti Jadwal</b></td>`;
+     if(!value)return `<td><span class="danger">❌ Ganti Jadwal</span></td>`;
+     return `<td>${escapeHtml(value)}</td>`;
+   }).join("");
+   return `<tr><td>${ri+1}</td><td><b>${escapeHtml(personName(p))}</b></td>${cells}</tr>`;
+ }).join("");
+}
+function generateUsroh(){
+ const month=+usrohMonth.value,year=+usrohYear.value,weeks=getWeekStarts(month,year);
+ // Hapus hasil lama untuk bulan/tahun yang dipilih.
+ Object.keys(usrohSchedule).forEach(k=>{
+   if(k.startsWith(`${year}-${month}-`))delete usrohSchedule[k];
+ });
+ let ok=0,ganti=0;
+ personsByDivision("BPJS").forEach(p=>{
+   weeks.forEach((w,wi)=>{
+     const found=findAvailable(p,w);
+     const key=`${year}-${month}-${p.id}-${wi}`;
+     if(found){
+       usrohSchedule[key]=fmtDateTime(found.date,found.time);
+       ok++;
+     }else{
+       usrohSchedule[key]="GANTI";
+       ganti++;
+     }
+   });
+ });
+ persist();renderUsrohMonth();
+ alert(`Jadwal Usroh selesai.\\n${ok} jadwal tersedia.\\n${ganti} jadwal perlu Ganti Jadwal.`);
+}
+function apmKey(date){return date;}
+function timeToMin(t){const [h,m]=t.split(":").map(Number);return h*60+m;}
+function apmSlots(){return Array.from({length:14},(_,i)=>{const h=7+i;return {start:`${String(h).padStart(2,"0")}:00`,end:`${String(h+1).padStart(2,"0")}:00`};});}
+function personOnDutyAt(person,date,time){
+  const d=new Date(date+"T00:00:00");
+  const code=shiftFor(person,d);
+  if(!code || code==="Libur" || code==="C")return false;
+  const range=shiftHours[code]; if(!range)return false;
+  const t=timeToMin(time), start=timeToMin(range[0]), end=timeToMin(range[1]);
+  return t>=start && t<end;
+}
+function apmEligible(date,time){
+  // APM menggunakan SEMUA personil dari dua divisi.
+  // Syaratnya hanya satu: personil harus sedang dinas pada jam APM tersebut.
+  const allApmPersons=persons.filter(p=>p && (normalizeDivision(p.division)==="BPJS" || normalizeDivision(p.division)==="Digital Marketing"));
+  return allApmPersons.filter(p=>personOnDutyAt(p,date,time));
+}
+function generateApm(){
+  const date=apmDate.value;
+  if(!date)return alert("Pilih tanggal APM terlebih dahulu.");
+
+  const slots=apmSlots();
+  const allApmPersons=persons.filter(p=>p && (normalizeDivision(p.division)==="BPJS" || normalizeDivision(p.division)==="Digital Marketing"));
+  const result={};
+
+  // Pastikan ID personil unik agar satu orang tidak pernah terbaca sebagai dua orang.
+  const usedIds=new Set();
+  allApmPersons.forEach((p,i)=>{
+    if(!p.id || usedIds.has(p.id)){
+      let n=i+1, id="P"+n;
+      while(usedIds.has(id)) id="P"+(++n);
+      p.id=id;
+    }
+    usedIds.add(p.id);
+  });
+
+  // Kandidat per jam, dipisahkan per divisi.
+  const byDivision={"BPJS":{},"Digital Marketing":{}};
+  slots.forEach(slot=>{
+    const eligible=apmEligible(date,slot.start);
+    byDivision.BPJS[slot.start]=eligible.filter(p=>normalizeDivision(p.division)==="BPJS");
+    byDivision["Digital Marketing"][slot.start]=eligible.filter(p=>normalizeDivision(p.division)==="Digital Marketing");
+  });
+
+  /*
+   * PEMBAGIAN APM:
+   * - Tepat 1 BPJS + 1 Digital Marketing pada setiap jam jika tersedia.
+   * - Masing-masing divisi dihitung TERPISAH.
+   * - Semua personil yang punya kesempatan dinas dibagi sedekat mungkin sama rata.
+   * - Tidak pernah memilih orang yang sama dua kali pada jam yang sama.
+   * - Jika seseorang tidak dinas pada jam tertentu, dia dilewati.
+   *
+   * Algoritma memakai skor kebutuhan: jumlah jam yang sudah didapat dibanding
+   * jumlah jam tersisa yang masih bisa dia isi. Personil yang jatahnya paling
+   * kurang diprioritaskan, sementara personil dengan kesempatan lebih sedikit
+   * dilindungi agar tidak kehabisan kesempatan.
+   */
+  function allocateDivision(division){
+    const people=allApmPersons.filter(p=>normalizeDivision(p.division)===division);
+    const assigned={};
+    people.forEach(p=>assigned[p.id]=0);
+
+    // Jika tidak ada personil divisi tersebut, semua slot kosong.
+    if(!people.length)return {};
+
+    const out={};
+    const remaining={};
+    people.forEach(p=>{
+      remaining[p.id]=slots.reduce((n,slot)=>n+(byDivision[division][slot.start].some(x=>x.id===p.id)?1:0),0);
+    });
+
+    function choose(pool, slotIndex){
+      if(!pool.length)return null;
+      const remainingSlots=slots.length-slotIndex;
+
+      return pool.slice().sort((a,b)=>{
+        const ra=remaining[a.id]||0, rb=remaining[b.id]||0;
+        const aa=assigned[a.id]||0, ab=assigned[b.id]||0;
+
+        // Target dasar sama rata berdasarkan jumlah personil divisi.
+        const totalFuture=Math.max(0, slots.slice(slotIndex).reduce((n,slot)=>n+(byDivision[division][slot.start].length>0?1:0),0));
+        const n=people.length;
+        const base=Math.floor(totalFuture/n);
+
+        // Kekurangan terhadap jatah ideal saat ini.
+        const needA=Math.max(0, base-aa);
+        const needB=Math.max(0, base-ab);
+        if(needA!==needB)return needB-needA;
+
+        // Lindungi orang yang kesempatan tersisanya sedikit.
+        const pressureA=ra>0 ? aa/ra : Infinity;
+        const pressureB=rb>0 ? ab/rb : Infinity;
+        if(pressureA!==pressureB)return pressureA-pressureB;
+
+        // Utamakan yang sudah mendapat paling sedikit.
+        if(aa!==ab)return aa-ab;
+
+        // Jika sama, utamakan yang punya kesempatan lebih sedikit.
+        if(ra!==rb)return ra-rb;
+        return String(a.id).localeCompare(String(b.id));
+      })[0];
+    }
+
+    slots.forEach((slot,slotIndex)=>{
+      const pool=(byDivision[division][slot.start]||[]).filter((p,i,a)=>a.findIndex(x=>x.id===p.id)===i);
+      const chosen=choose(pool,slotIndex);
+      if(chosen){
+        out[slot.start]=chosen;
+        assigned[chosen.id]++;
+      }
+      // Kurangi kesempatan setelah slot diproses untuk seluruh kandidat.
+      pool.forEach(p=>{ remaining[p.id]=Math.max(0,(remaining[p.id]||0)-1); });
+    });
+    return out;
+  }
+
+  const bpjsAllocation=allocateDivision("BPJS");
+  const dmAllocation=allocateDivision("Digital Marketing");
+
+  slots.forEach(slot=>{
+    const selected=[];
+    const b=bpjsAllocation[slot.start];
+    const dm=dmAllocation[slot.start];
+    if(b)selected.push(b);
+    if(dm)selected.push(dm);
+
+    result[slot.start]={
+      end:slot.end,
+      personIds:selected.map(p=>p.id),
+      persons:selected.map(p=>({id:p.id,name:personName(p),division:normalizeDivision(p.division)})),
+      person:selected.map(p=>personName(p)).join(" & "),
+      division:selected.map(p=>normalizeDivision(p.division)).join(" & ")
+    };
+  });
+
+  apmSchedule[apmKey(date)]=result;
+  persist();
+  renderApm();
+}
+function renderApm(){
+  if(!window.apmDate || !apmDate.value)return;
+  const date=apmDate.value, slots=apmSlots(), data=apmSchedule[apmKey(date)]||{};
+  const d=new Date(date+"T00:00:00");
+  apmHead.innerHTML=`<tr><th>No</th><th>Jam APM</th><th>Personil</th><th>Divisi</th><th>Shift Hari Ini</th><th>Status</th></tr>`;
+
+  apmBody.innerHTML=slots.map((slot,i)=>{
+    const a=data[slot.start]||{};
+    const eligible=apmEligible(date,slot.start);
+    let selected=[];
+
+    if(Array.isArray(a.personIds)){
+      selected=a.personIds.map(id=>getPersonById(id)).filter(Boolean);
+    }
+    if(!selected.length && Array.isArray(a.persons)){
+      selected=a.persons.map(x=>getPersonById(x.id)||persons.find(p=>personName(p)===x.name)).filter(Boolean);
+    }
+    if(!selected.length && typeof a.person==="string" && a.person!=="TIDAK ADA PERSONIL DINAS"){
+      selected=a.person.split(/\s*,\s*/).map(n=>persons.find(p=>personName(p)===n)).filter(Boolean);
+    }
+
+    const personText=selected.length
+      ? selected.map(p=>personName(p)).join(" & ")
+      : (a.person && a.person!=="TIDAK ADA PERSONIL DINAS" ? a.person : "TIDAK ADA PERSONIL DINAS");
+    const divisionText=selected.length
+      ? selected.map(p=>normalizeDivision(p.division)).join(" & ")
+      : (a.division||"-");
+    const shiftText=selected.length
+      ? selected.map(p=>`${personName(p)}: ${shiftFor(p,d) || "-"}`).join("<br>")
+      : "-";
+    const ok=selected.length>0;
+
+    return `<tr><td>${i+1}</td><td><b>${slot.start} – ${slot.end}</b></td><td><b>${escapeHtml(personText)}</b></td><td><b>${escapeHtml(divisionText)}</b></td><td>${shiftText}</td><td>${ok?`<span style="color:#16803c">✓ ${selected.length} personil (${eligible.length} tersedia)</span>`:`<span class="danger">❌ Tidak ada personil yang dinas</span>`}</td></tr>`;
+  }).join("");
+}
+function addHoliday(){
+ const v=newHoliday.value;
+ if(!v)return alert("Pilih tanggal libur.");
+ if(!holidays.includes(v))holidays.push(v);
+ holidays.sort();persist();renderHolidays();renderUsrohMonth();newHoliday.value="";
+}
+function deleteHoliday(i){
+ holidays.splice(i,1);persist();renderHolidays();renderUsrohMonth();
+}
+function renderHolidays(){
+ if(!holidayBody)return;
+ holidayBody.innerHTML=holidays.map((d,i)=>`<tr><td>${i+1}</td><td>${d}</td><td><button class="btn del" onclick="deleteHoliday(${i})">Hapus</button></td></tr>`).join("");
+}
+function rekapMonthKey(){return `${rekapYear.value}-${String(+rekapMonth.value+1).padStart(2,"0")}`}
+function initRekapMonthYear(){const names=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];rekapMonth.innerHTML=names.map((n,i)=>`<option value="${i}">${n}</option>`).join("");let y=new Date().getFullYear();rekapYear.innerHTML="";for(let i=y-5;i<=y+5;i++)rekapYear.innerHTML+=`<option value="${i}">${i}</option>`;rekapMonth.value=new Date().getMonth();rekapYear.value=y;}
+function addRekapName(){const el=document.getElementById("rekapNameInput"),name=(el.value||"").trim();if(!name)return alert("Masukkan nama peserta Usroh.");if(rekapNames.includes(name))return alert("Nama sudah ada di Rekapan Usroh.");rekapNames.push(name);el.value="";persist();renderRekap();}
+function removeRekapName(i){if(confirm("Hapus nama ini dari Rekapan Usroh?")){rekapNames.splice(i,1);persist();renderRekap();}}
+function rekapWeeks(month,year){const first=new Date(year,month,1),monday=new Date(first);monday.setDate(first.getDate()-((first.getDay()+6)%7));return [0,1,2,3].map(i=>{const d=new Date(monday);d.setDate(monday.getDate()+i*7);return d;});}
+function rekapSessions(w){return [[0,"13:00"],[1,"07:00"],[2,"07:00"],[2,"13:00"],[3,"13:00"]].map(([o,t])=>{const d=new Date(w);d.setDate(w.getDate()+o);return {date:d,time:t};});}
+function rekapDate(d){return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`}
+function rekapStatusOptions(v){return ["","Hadir","Tidak Hadir","Izin","Sakit","Dinas"].map(x=>`<option value="${x}" ${x===v?"selected":""}>${x||"-"}</option>`).join("");}
+function setRekapStatus(name,week,status){const key=rekapMonthKey();if(!rekapData[key])rekapData[key]={};if(!rekapData[key][name])rekapData[key][name]={};rekapData[key][name][week]=status;persist();renderRekap();}
+function setEval(i,f,v){const key=rekapMonthKey();if(!rekapEval[key])rekapEval[key]={};if(!rekapEval[key][i])rekapEval[key][i]={};rekapEval[key][i][f]=v;persist();}
+function renderRekap(){if(!window.rekapMonth||!rekapMonth.value)return;const month=+rekapMonth.value,year=+rekapYear.value,key=rekapMonthKey(),weeks=rekapWeeks(month,year);rekapHead.innerHTML=`<tr><th rowspan="2">No</th><th rowspan="2">Nama</th>${weeks.map((w,i)=>{let e=new Date(w);e.setDate(w.getDate()+3);return `<th colspan="3">Pekan ${i+1}<br><small>${rekapDate(w)} – ${rekapDate(e)}</small></th>`}).join("")}<th rowspan="2">Hadir</th><th rowspan="2">Tidak Hadir</th></tr><tr>${weeks.map(()=>"<th>Ket</th><th>Tanggal</th><th>Jam</th>").join("")}</tr>`;const md=rekapData[key]||{};rekapBody.innerHTML=rekapNames.map((name,i)=>{const v=weeks.map((w,wi)=>{const a=rekapSessions(w),st=(md[name]||{})[wi]||"";return {status:st,chosen:a[0]};});const hadir=v.filter(x=>x.status==="Hadir").length,tidak=v.filter(x=>x.status==="Tidak Hadir").length;return `<tr><td>${i+1}</td><td><b>${escapeHtml(name)}</b><br><button class="btn del" onclick="removeRekapName(${i})">Hapus</button></td>`+v.map((x,wi)=>`<td><select onchange='setRekapStatus(${JSON.stringify(name)},${wi},this.value)'>${rekapStatusOptions(x.status)}</select></td><td>${rekapDate(x.chosen.date)}</td><td>${x.chosen.time}</td>`).join("")+`<td><b>${hadir}</b></td><td><b>${tidak}</b></td></tr>`}).join("")||`<tr><td colspan="16" class="muted">Belum ada nama.</td></tr>`;const ev=rekapEval[key]||{};evalBody.innerHTML=rekapNames.map((n,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(n)}</td><td><input value="${escapeHtml((ev[i]||{}).week||"")}" onchange="setEval(${i},'week',this.value)"></td><td><input value="${escapeHtml((ev[i]||{}).note||"")}" onchange="setEval(${i},'note',this.value)"></td><td><input value="${escapeHtml((ev[i]||{}).sanction||"")}" onchange="setEval(${i},'sanction',this.value)"></td></tr>`).join("");document.getElementById("rekapNames").innerHTML=rekapNames.map((n,i)=>`<span>${escapeHtml(n)} <button onclick="removeRekapName(${i})">×</button></span>`).join(" ");}
+function monthKey(){return `${shiftYear.value}-${String(+shiftMonth.value+1).padStart(2,"0")}`}
+function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}
+function initMonthYear(){
+ const names=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+ shiftMonth.innerHTML=names.map((n,i)=>`<option value="${i}">${n}</option>`).join("");
+ let y=new Date().getFullYear(); shiftYear.innerHTML="";
+ for(let i=y-5;i<=y+5;i++)shiftYear.innerHTML+=`<option value="${i}">${i}</option>`;
+ shiftMonth.value=new Date().getMonth();shiftYear.value=y;
+}
+function renderShift(){
+  if(!shiftMonth.value)return;
+  const y=+shiftYear.value,m=+shiftMonth.value,d=daysInMonth(y,m),key=monthKey();
+  const month=shiftData[key]||{};
+  const renderTable=(headEl,bodyEl,division)=>{
+    headEl.innerHTML="<tr><th>Nama Personil</th>"+Array.from({length:d},(_,i)=>`<th>${i+1}</th>`).join("")+"</tr>";
+    bodyEl.innerHTML=personsByDivision(division).map(p=>{
+      const name=personName(p), id=p.id;
+      let row="<tr><td><b>"+escapeHtml(name)+"</b></td>";
+      for(let day=1;day<=d;day++){
+        const val=(month[id]&&month[id][day]) || (month[name]&&month[name][day]) || "";
+        row+=`<td><select class="shift-select" onchange="setShift('${esc(id)}',${day},this.value)"><option value="">-</option>${shiftCodes.map(c=>`<option ${c===val?"selected":""} value="${esc(c)}">${escapeHtml(c)}</option>`).join("")}</select></td>`;
+      }
+      return row+"</tr>";
+    }).join("");
+  };
+  renderTable(shiftBpjsHead,shiftBpjsBody,"BPJS");
+  renderTable(shiftDmHead,shiftDmBody,"Digital Marketing");
+}function setShift(person,day,value){
+ let key=monthKey();if(!shiftData[key])shiftData[key]={};if(!shiftData[key][person])shiftData[key][person]={};
+ if(value)shiftData[key][person][day]=value;else delete shiftData[key][person][day];
+ persist();
+ // Jika halaman Usroh sedang terbuka, status bentrok langsung diperbarui.
+ if(document.getElementById("usroh").classList.contains("active")) renderUsrohMonth();
+}
+function saveShiftMonth(){persist();alert("Jadwal shift bulan "+shiftMonth.options[shiftMonth.selectedIndex].text+" "+shiftYear.value+" sudah disimpan.")}
+function addPerson(division){
+  const el=division==="BPJS"?newPersonBpjs:newPersonDm;
+  const name=el.value.trim();
+  if(!name)return alert("Masukkan nama personil.");
+  if(persons.some(p=>personName(p).toLowerCase()===name.toLowerCase()))return alert("Nama personil sudah ada.");
+  const next=persons.reduce((n,p)=>Math.max(n,parseInt(String(p.id||"").replace(/\\D/g,""))||0),0)+1;
+  persons.push({id:"P"+next,name,division});
+  el.value="";persist();renderMaster();renderShift();renderUsrohMonth();renderApm();updateBeranda();
+}
+function deletePerson(i){
+  const p=persons[i];
+  if(!p)return;
+  if(confirm(`Hapus ${personName(p)} dari Master Data? Data jadwal lama tetap tersimpan.`)){
+    persons.splice(i,1);persist();renderMaster();renderShift();renderUsrohMonth();renderApm();updateBeranda();
+  }
+}
+function editPerson(i){
+  const p=persons[i]; if(!p)return;
+  const name=prompt("Ubah nama personil:",personName(p));
+  if(name&&name.trim()){
+    if(persons.some((x,j)=>j!==i&&personName(x).toLowerCase()===name.trim().toLowerCase()))return alert("Nama personil sudah ada.");
+    p.name=name.trim();persist();renderMaster();renderShift();renderUsrohMonth();renderApm();
+  }
+}
+
+function addCode(){
+ let c=newCode.value.trim();if(!c)return alert("Masukkan kode shift.");
+ if(shiftCodes.includes(c))return alert("Kode shift sudah ada.");
+ shiftCodes.push(c);newCode.value="";persist();renderMaster();renderShift();
+}
+function deleteCode(i){
+ if(confirm("Hapus kode shift ini? Data lama yang memakai kode tersebut tetap tersimpan.")){shiftCodes.splice(i,1);persist();renderMaster();renderShift()}
+}
+function renderMaster(){
+  const bpjs=personsByDivision("BPJS");
+  const dm=personsByDivision("Digital Marketing");
+  const row=(p,i,globalIndex)=>`<tr><td>${i+1}</td><td>${escapeHtml(personName(p))}</td><td>${escapeHtml(p.division)}</td><td><button class="btn edit" onclick="editPerson(${globalIndex})">Edit</button> <button class="btn del" onclick="deletePerson(${globalIndex})">Hapus</button></td></tr>`;
+  personBpjsBody.innerHTML=bpjs.map((p,i)=>row(p,i,persons.indexOf(p))).join("") || `<tr><td colspan="4">Belum ada personil BPJS.</td></tr>`;
+  personDmBody.innerHTML=dm.map((p,i)=>row(p,i,persons.indexOf(p))).join("") || `<tr><td colspan="4">Belum ada personil Digital Marketing.</td></tr>`;
+  codeBody.innerHTML=shiftCodes.map((c,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(c)}</td><td><button class="btn del" onclick="deleteCode(${i})">Hapus</button></td></tr>`).join("");
+}function render(){
+ renderUsrohMonth();
+ renderRekap();
+}
+function updateBeranda(){
+ dashUsroh.textContent=Object.values(usrohSchedule).filter(x=>x!=="GANTI").length;
+ dashMember.textContent=persons.length;
+ let total=0;Object.values(shiftData).forEach(month=>Object.values(month).forEach(days=>total+=Object.keys(days).length));
+ dashFilled.textContent=total;
+ let totalA=0,hadir=0;
+ Object.values(rekapData).forEach(month=>Object.values(month||{}).forEach(person=>Object.values(person||{}).forEach(v=>{if(v){totalA++;if(v==="Hadir")hadir++;}})));
+ dashAttend.textContent=totalA?Math.round(hadir/totalA*100)+"%":"0%";
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function esc(s){return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
+initMonthYear();initUsrohMonthYear();initRekapMonthYear();
+if(window.apmDate){apmDate.value=new Date().toISOString().slice(0,10);}
+render();renderMaster();renderHolidays();renderShift();renderUsrohMonth();updateBeranda();
+</script>
+</body>
+</html>
